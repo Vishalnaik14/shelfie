@@ -10,7 +10,7 @@ const GuestOnly = ({ children }) => {
   
   useEffect(() => {
     if (authChecked && user !== null) {
-      router.replace("/(tabs)")  // ✅ Go to tabs, not profile
+      router.replace("/profile")
     }
   }, [user, authChecked])
 
