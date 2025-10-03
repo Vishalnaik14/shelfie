@@ -1,4 +1,4 @@
-import { StyleSheet, FlatList, Pressable } from 'react-native'
+import { StyleSheet, FlatList, Pressable, View } from 'react-native'
 import { useState } from 'react'
 import { useBooks } from '../../hooks/useBooks'
 import { Colors } from '../../constants/Colors'
@@ -17,13 +17,14 @@ const Books = () => {
 
   // Filter books based on search query
   const filteredBooks = books.filter((book) => {
-    if (!searchQuery) return true // Show all books if no search query
+    if (!searchQuery) return true
     
     const query = searchQuery.toLowerCase()
-    const titleMatch = book.title.toLowerCase().includes(query)
-    const authorMatch = book.author.toLowerCase().includes(query)
+    const titleMatch = book.title?.toLowerCase().includes(query) || false
+    const authorMatch = book.author?.toLowerCase().includes(query) || false
+    const genreMatch = book.genre?.toLowerCase().includes(query) || false
     
-    return titleMatch || authorMatch
+    return titleMatch || authorMatch || genreMatch
   })
 
   return (
@@ -40,7 +41,7 @@ const Books = () => {
       <ThemedView style={styles.searchContainer}>
         <ThemedTextInput
           style={styles.searchInput}
-          placeholder="Search by title or author..."
+          placeholder="Search by title, author, or genre..."
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -50,14 +51,29 @@ const Books = () => {
         data={filteredBooks}
         keyExtractor={(item) => item.$id}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <Pressable onPress={() => router.push(`/books/${item.$id}`)}>
             <ThemedCard style={styles.card}>
-              <ThemedText style={styles.title}>{item.title}</ThemedText>
-              <ThemedText>Written by {item.author}</ThemedText>
+              <View style={styles.cardHeader}>
+                <ThemedText style={styles.title} numberOfLines={2}>
+                  {item.title}
+                </ThemedText>
+                {item.genre && (
+                  <View style={styles.genreBadge}>
+                    <ThemedText style={styles.genreText}>{item.genre}</ThemedText>
+                  </View>
+                )}
+              </View>
+              <ThemedText style={styles.author}>Written by {item.author}</ThemedText>
             </ThemedCard>
           </Pressable>
         )}
+        ListEmptyComponent={
+          <ThemedView style={styles.emptyContainer}>
+            <ThemedText style={styles.emptyText}>No books found</ThemedText>
+          </ThemedView>
+        }
       />
 
     </ThemedView>
@@ -85,7 +101,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   list: {
-    marginTop: 20
+    marginTop: 20,
+    paddingBottom: 20,
   },
   card: {
     width: "90%",
@@ -96,9 +113,41 @@ const styles = StyleSheet.create({
     borderLeftColor: Colors.primary,
     borderLeftWidth: 4
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+    gap: 10,
+  },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
+    flex: 1,
+  },
+  author: {
+    fontSize: 14,
+  },
+  genreBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  genreText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    opacity: 0.6,
   },
 })

@@ -1,7 +1,8 @@
-import { StyleSheet, Text, TouchableWithoutFeedback, Keyboard } from 'react-native'
+import { StyleSheet, Text, TouchableWithoutFeedback, Keyboard, ScrollView, Platform } from 'react-native'
 import { useBooks } from "../../hooks/useBooks"
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
+import { Picker } from '@react-native-picker/picker'
 
 // themed components
 import ThemedView from "../../components/ThemedView"
@@ -10,77 +11,137 @@ import ThemedTextInput from "../../components/ThemedTextInput"
 import ThemedButton from '../../components/ThemedButton'
 import Spacer from '../../components/Spacer'
 
+// Genre options
+const GENRES = [
+  'Fiction',
+  'Non-Fiction',
+  'Mystery',
+  'Thriller',
+  'Romance',
+  'Science Fiction',
+  'Fantasy',
+  'Biography',
+  'History',
+  'Self-Help',
+  'Other'
+]
+
 const Create = () => {
   const [title, setTitle] = useState("")
   const [author, setAuthor] = useState("")
   const [description, setDescription] = useState("")
+  const [genre, setGenre] = useState("") 
   const [loading, setLoading] = useState(false)
 
   const { createBook } = useBooks()
   const router = useRouter()
 
   async function handleSubmit() {
-    if (!title.trim() || !author.trim() || !description.trim()) return
+    if (!title.trim() || !author.trim() || !description.trim() || !genre) return
 
     setLoading(true)
     
-    // create the book
-    await createBook({ title, author, description })
+    try {
+      // create the book with genre
+      await createBook({ title, author, description, genre })
 
-    // reset fields
-    setTitle("")
-    setAuthor("")
-    setDescription("")
+      // reset fields
+      setTitle("")
+      setAuthor("")
+      setDescription("")
+      setGenre("")
 
-    // redirect
-    router.replace("/books")
-
-    // reset loading state
-    setLoading(false) 
+      // redirect
+      router.replace("/books")
+    } catch (error) {
+      console.error("Error creating book:", error)
+    } finally {
+      // reset loading state
+      setLoading(false) 
+    }
   }
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}> 
-      <ThemedView style={styles.container}>
+    <ThemedView style={styles.container} safe={true}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bounces={true}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ThemedView style={styles.formContainer}>
+            <ThemedText title={true} style={styles.heading}>
+              Add a New Book
+            </ThemedText>
+            <Spacer />
 
-        <ThemedText title={true} style={styles.heading}>
-          Add a New Book
-        </ThemedText>
-        <Spacer />
+            <ThemedTextInput
+              style={styles.input}
+              placeholder="Book Title"
+              value={title}
+              onChangeText={setTitle}
+            />
+            <Spacer />
 
-        <ThemedTextInput
-          style={styles.input}
-          placeholder="Book Title"
-          value={title}
-          onChangeText={setTitle}
-        />
-        <Spacer />
+            <ThemedTextInput
+              style={styles.input}
+              placeholder="Author"
+              value={author}
+              onChangeText={setAuthor}
+            />
+            <Spacer />
 
-        <ThemedTextInput
-          style={styles.input}
-          placeholder="Author"
-          value={author}
-          onChangeText={setAuthor}
-        />
-        <Spacer />
+           {/* Genre Dropdown */}
+            <ThemedView style={styles.pickerContainer}>
+              <ThemedText style={styles.label}>Genre:</ThemedText>
+              <ThemedView style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={genre}
+                  onValueChange={(itemValue) => {
+                    console.log("Selected genre:", itemValue)
+                    setGenre(itemValue)
+                  }}
+                  style={[styles.picker, { color: '#ffffffff' }]} // ✅ Ensure visible text
+                  mode="dropdown"
+                  dropdownIconColor="#666"
+                >
+                  {GENRES.map((g) => (
+                    <Picker.Item key={g} label={g} value={g} color="#ffffffff" /> // ✅ Visible text
+                  ))}
+                </Picker>
+              </ThemedView>
+            </ThemedView>
 
-        <ThemedTextInput
-          style={styles.multiline}
-          placeholder="Book Description"
-          value={description}
-          onChangeText={setDescription}
-          multiline={true}
-        />
-        <Spacer />
+            <Spacer />
 
-        <ThemedButton onPress={handleSubmit} disabled={loading}>
-          <Text style={{ color: '#fff' }}>
-            {loading ? "Saving..." : "Create Book"}
-          </Text>
-        </ThemedButton>
+            <ThemedTextInput
+              style={styles.multiline}
+              placeholder="Book Description"
+              value={description}
+              onChangeText={setDescription}
+              multiline={true}
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+            <Spacer />
 
-      </ThemedView>
-    </TouchableWithoutFeedback>
+            <ThemedView style={styles.buttonContainer}>
+              <ThemedButton 
+                style={styles.button}
+                onPress={handleSubmit} 
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? "Saving..." : "Create Book"}
+                </Text>
+              </ThemedButton>
+            </ThemedView>
+            <Spacer size={40} />
+          </ThemedView>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+    </ThemedView>
   )
 }
 
@@ -89,8 +150,14 @@ export default Create
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  formContainer: {
+    flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    paddingVertical: 40,
   },
   heading: {
     fontWeight: "bold",
@@ -109,5 +176,56 @@ const styles = StyleSheet.create({
     minHeight: 100,
     alignSelf: 'stretch',
     marginHorizontal: 40,
+  },
+  pickerContainer: {
+    alignSelf: 'stretch',
+    marginHorizontal: 40,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+pickerWrapper: {
+  borderRadius: 8,
+  borderColor: '#ccc',
+  overflow: 'hidden',
+  borderWidth: 1,
+  ...Platform.select({
+    ios: {
+      height: 200, // enough space for scroll wheel
+    },
+    android: {
+      height: 44, // compact dropdown
+    },
+  }),
+},
+picker: {
+  fontSize: 14,
+  ...Platform.select({
+    ios: {
+      height: 180, // scrollable space for wheel
+    },
+    android: {
+      height: 44, // compact input style
+    },
+  }),
+},
+
+
+  buttonContainer: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  button: {
+    width: '50%',
+    maxWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 })

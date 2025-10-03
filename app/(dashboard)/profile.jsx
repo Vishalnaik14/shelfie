@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, TouchableWithoutFeedback, Keyboard } from 'react-native'
 import { useUser } from '../../hooks/useUser'
 import { useProfile } from '../../hooks/useProfile'
 import { useState } from 'react'
@@ -18,45 +18,49 @@ const Profile = () => {
     if (goalInput && !isNaN(goalInput)) {
       updateReadingGoal(parseInt(goalInput))
       setGoalInput('')
+      Keyboard.dismiss() // Dismiss keyboard after setting goal
     }
   }
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText title={true} style={styles.heading}>
-        {user.email}
-      </ThemedText>
-      <Spacer />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.innerContainer}>
+          <ThemedText title={true} style={styles.heading}>
+            {user.email}
+          </ThemedText>
+          <Spacer />
 
-      <View style={styles.goalContainer}>
-        <ThemedText style={styles.goalText}>
-          Monthly Reading Goal: {profile?.readingGoal || 0} books
-        </ThemedText>
-        <Spacer />
-        
-        <ThemedTextInput
-          style={styles.input}
-          placeholder="Set new goal"
-          placeholderTextColor="#999"
-          keyboardType="numeric"
-          value={goalInput}
-          onChangeText={setGoalInput}
-        />
-        <Spacer />
-        
-        <ThemedButton onPress={handleSetGoal} style={styles.button}>
-          <Text style={{ color: '#f2f2f2', textAlign: 'center' }}>Update Goal</Text>
-        </ThemedButton>
-      </View>
+          <View style={styles.goalContainer}>
+            <ThemedText style={styles.goalText}>
+              Monthly Reading Goal: {profile?.readingGoal || 0} books
+            </ThemedText>
+            <Spacer />
+            
+            <ThemedTextInput
+              style={styles.input}
+              placeholder="Set new goal"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+              value={goalInput}
+              onChangeText={setGoalInput}
+            />
+            <Spacer />
+            
+            <ThemedButton onPress={handleSetGoal} style={styles.button}>
+              <Text style={{ color: '#f2f2f2', textAlign: 'center' }}>Update Goal</Text>
+            </ThemedButton>
+          </View>
 
-      <ThemedButton onPress={logout} style={styles.button}>
-        <Text style={{ color: '#f2f2f2', textAlign: 'center' }}>Logout</Text>
-      </ThemedButton>
+          <ThemedButton onPress={logout} style={styles.button}>
+            <Text style={{ color: '#f2f2f2', textAlign: 'center' }}>Logout</Text>
+          </ThemedButton>
 
-      <Spacer />
-      <ThemedText>Time to start reading some books...</ThemedText>
-      <Spacer />
-
+          <Spacer />
+          <ThemedText>Time to start reading some books...</ThemedText>
+          <Spacer />
+        </View>
+      </TouchableWithoutFeedback>
     </ThemedView>
   )
 }
@@ -65,6 +69,9 @@ export default Profile
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  innerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
