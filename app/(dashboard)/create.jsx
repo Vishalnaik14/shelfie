@@ -37,13 +37,23 @@ const Create = () => {
   const router = useRouter()
 
   async function handleSubmit() {
-    if (!title.trim() || !author.trim() || !description.trim() || !genre) return
+    // Debug: Check what values we have
+    console.log("Form values:", { title, author, description, genre })
+    
+    if (!title.trim() || !author.trim() || !description.trim() || !genre) {
+      console.log("Validation failed - missing fields")
+      alert("Please fill in all fields including genre")
+      return
+    }
 
     setLoading(true)
     
     try {
       // create the book with genre
+      console.log("Creating book with:", { title, author, description, genre })
       await createBook({ title, author, description, genre })
+      
+      console.log("Book created successfully!")
 
       // reset fields
       setTitle("")
@@ -55,6 +65,7 @@ const Create = () => {
       router.replace("/books")
     } catch (error) {
       console.error("Error creating book:", error)
+      alert("Error creating book: " + error.message)
     } finally {
       // reset loading state
       setLoading(false) 
@@ -102,12 +113,13 @@ const Create = () => {
                     console.log("Selected genre:", itemValue)
                     setGenre(itemValue)
                   }}
-                  style={[styles.picker, { color: '#ffffffff' }]} // ✅ Ensure visible text
+                  style={styles.picker}
                   mode="dropdown"
                   dropdownIconColor="#666"
                 >
+                  <Picker.Item label="Select a genre..." value="" />
                   {GENRES.map((g) => (
-                    <Picker.Item key={g} label={g} value={g} color="#ffffffff" /> // ✅ Visible text
+                    <Picker.Item key={g} label={g} value={g} />
                   ))}
                 </Picker>
               </ThemedView>
@@ -186,33 +198,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
   },
-pickerWrapper: {
-  borderRadius: 8,
-  borderColor: '#ccc',
-  overflow: 'hidden',
-  borderWidth: 1,
-  ...Platform.select({
-    ios: {
-      height: 200, // enough space for scroll wheel
-    },
-    android: {
-      height: 44, // compact dropdown
-    },
-  }),
-},
-picker: {
-  fontSize: 14,
-  ...Platform.select({
-    ios: {
-      height: 180, // scrollable space for wheel
-    },
-    android: {
-      height: 44, // compact input style
-    },
-  }),
-},
-
-
+  pickerWrapper: {
+    borderRadius: 8,
+    borderColor: '#ccc',
+    overflow: 'hidden',
+    borderWidth: 1,
+    backgroundColor: '#2d2a2aff',
+    ...Platform.select({
+      ios: {
+        height: 200,
+      },
+      android: {
+        height: 50,
+      },
+    }),
+  },
+  picker: {
+    ...Platform.select({
+      ios: {
+        height: 180,
+      },
+      android: {
+        height: 50,
+      },
+    }),
+  },
   buttonContainer: {
     alignItems: 'center',
     width: '100%',
