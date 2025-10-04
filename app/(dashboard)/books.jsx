@@ -63,12 +63,11 @@ const Books = () => {
   return (
     <ThemedView style={styles.container} safe={true}>
 
-      <Spacer />
       <ThemedText title={true} style={styles.heading}>
         Your Reading List
       </ThemedText>
 
-      <Spacer />
+      <Spacer height={10}/>
       
       {/* Search Bar */}
       <ThemedView style={styles.searchContainer}>

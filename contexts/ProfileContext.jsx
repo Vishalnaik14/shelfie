@@ -26,7 +26,7 @@ export function ProfileProvider({children}) {
         setProfile(response.documents[0])
       } else {
         // Create a default profile if none exists
-        await createProfile({ readingGoal: 0 })
+        await createProfile({ readingGoal: 0, readingReminders: '[]' })
       }
     } catch (error) {
       console.error(error.message)
@@ -68,6 +68,99 @@ export function ProfileProvider({children}) {
     }
   }
 
+  // Get reading reminders as array
+  function getReadingReminders() {
+    if (!profile?.readingReminders) return []
+    
+    try {
+      const reminders = typeof profile.readingReminders === 'string' 
+        ? JSON.parse(profile.readingReminders) 
+        : profile.readingReminders
+      
+      return Array.isArray(reminders) ? reminders : []
+    } catch (error) {
+      console.error('Error parsing reminders:', error)
+      return []
+    }
+  }
+
+  // Add a new reading reminder
+  async function addReadingReminder(reminder) {
+    try {
+      if (!profile) {
+        throw new Error('Profile not loaded')
+      }
+
+      const currentReminders = getReadingReminders()
+      const updatedReminders = [...currentReminders, reminder]
+
+      const updatedProfile = await databases.updateDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        profile.$id,
+        { readingReminders: JSON.stringify(updatedReminders) }
+      )
+      
+      setProfile(updatedProfile)
+      return updatedProfile
+    } catch (error) {
+      console.error('Error adding reminder:', error.message)
+      throw error
+    }
+  }
+
+  // Delete a reading reminder
+  async function deleteReadingReminder(reminderId) {
+    try {
+      if (!profile) {
+        throw new Error('Profile not loaded')
+      }
+
+      const currentReminders = getReadingReminders()
+      const updatedReminders = currentReminders.filter(r => r.id !== reminderId)
+
+      const updatedProfile = await databases.updateDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        profile.$id,
+        { readingReminders: JSON.stringify(updatedReminders) }
+      )
+      
+      setProfile(updatedProfile)
+      return updatedProfile
+    } catch (error) {
+      console.error('Error deleting reminder:', error.message)
+      throw error
+    }
+  }
+
+  // Update an existing reading reminder
+  async function updateReadingReminder(reminderId, updatedData) {
+    try {
+      if (!profile) {
+        throw new Error('Profile not loaded')
+      }
+
+      const currentReminders = getReadingReminders()
+      const updatedReminders = currentReminders.map(r => 
+        r.id === reminderId ? { ...r, ...updatedData } : r
+      )
+
+      const updatedProfile = await databases.updateDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        profile.$id,
+        { readingReminders: JSON.stringify(updatedReminders) }
+      )
+      
+      setProfile(updatedProfile)
+      return updatedProfile
+    } catch (error) {
+      console.error('Error updating reminder:', error.message)
+      throw error
+    }
+  }
+
   useEffect(() => {
     let unsubscribe
     const channel = `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents`
@@ -95,7 +188,14 @@ export function ProfileProvider({children}) {
 
   return (
     <ProfileContext.Provider 
-      value={{ profile, updateReadingGoal }}
+      value={{ 
+        profile, 
+        updateReadingGoal,
+        addReadingReminder,
+        deleteReadingReminder,
+        updateReadingReminder,
+        getReadingReminders
+      }}
     >
       {children}
     </ProfileContext.Provider>
