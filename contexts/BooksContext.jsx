@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react"
-import { databases, client } from "../lib/appwrite"
+import { databases } from "../lib/appwrite"
 import { ID, Permission, Query, Role } from "react-native-appwrite"
 import { useUser } from "../hooks/useUser"
 
@@ -23,9 +23,9 @@ export function BooksProvider({children}) {
       )
 
       setBooks(response.documents)
-      console.log(response.documents)
+      console.log("Fetched books:", response.documents.length)
     } catch (error) {
-      console.error(error.message)
+      console.error("Error fetching books:", error.message)
     }
   }
 
@@ -45,19 +45,69 @@ export function BooksProvider({children}) {
 
   async function createBook(data) {
     try {
-      await databases.createDocument(
+      const response = await databases.createDocument(
         DATABASE_ID,
         COLLECTION_ID,
         ID.unique(),
-        {...data, userId: user.$id},
+        {...data, userId: user.$id, rating: 0},
         [
           Permission.read(Role.user(user.$id)),
           Permission.update(Role.user(user.$id)),
           Permission.delete(Role.user(user.$id)),
         ]
       )
+      
+      console.log("Book created:", response.$id)
+      
+      // Add to local state immediately
+      setBooks((prevBooks) => [...prevBooks, response])
+      
+      return response
     } catch (error) {
-      console.log(error.message)
+      console.log("Error creating book:", error.message)
+      throw error
+    }
+  }
+
+  async function updateBook(id, data) {
+    try {
+      // First fetch the current book to merge with new data
+      const currentBook = await databases.getDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        id
+      )
+
+      // Merge existing data with new data to avoid missing required fields
+      const updatedData = {
+        title: currentBook.title,
+        author: currentBook.author,
+        description: currentBook.description,
+        genre: currentBook.genre || 'Other',
+        rating: currentBook.rating || 0,
+        ...data // Override with new data
+      }
+
+      const response = await databases.updateDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        id,
+        updatedData
+      )
+      
+      console.log("Book updated:", id)
+      
+      // Update local state immediately
+      setBooks((prevBooks) => 
+        prevBooks.map((book) => 
+          book.$id === id ? { ...book, ...data } : book
+        )
+      )
+      
+      return response
+    } catch (error) {
+      console.log('Error updating book:', error.message)
+      throw error
     }
   }
 
@@ -67,45 +117,33 @@ export function BooksProvider({children}) {
         DATABASE_ID,
         COLLECTION_ID,
         id
-      )     
+      )
+      
+      console.log("Book deleted:", id)
+      
+      // Remove from local state immediately
+      setBooks((prevBooks) => prevBooks.filter((book) => book.$id !== id))
+      
     } catch (error) {
-      console.log(error.message)
+      console.log("Error deleting book:", error.message)
+      throw error
     }
   }
 
+  // Fetch books when user logs in
   useEffect(() => {
-    let unsubscribe
-    const channel = `databases.${DATABASE_ID}.collections.${COLLECTION_ID}.documents`
-
     if (user) {
+      console.log("User logged in, fetching books")
       fetchBooks()
-
-      unsubscribe = client.subscribe(channel, (response) => {
-        const { payload, events } = response
-        console.log(events)
-
-        if (events[0].includes("create")) {
-          setBooks((prevBooks) => [...prevBooks, payload])
-        }
-
-        if (events[0].includes("delete")) {
-          setBooks((prevBooks) => prevBooks.filter((book) => book.$id !== payload.$id))
-        }
-      })
-
     } else {
+      console.log("No user, clearing books")
       setBooks([])
     }
-
-    return () => {
-      if (unsubscribe) unsubscribe()
-    }
-
   }, [user])
 
   return (
     <BooksContext.Provider 
-      value={{ books, fetchBooks, fetchBookById, createBook, deleteBook }}
+      value={{ books, fetchBooks, fetchBookById, createBook, updateBook, deleteBook }}
     >
       {children}
     </BooksContext.Provider>
