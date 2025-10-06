@@ -63,6 +63,11 @@ const BookDetails = () => {
     router.replace('/books')
   }
 
+  // NEW: Navigate to edit screen
+  const handleEdit = () => {
+    router.push(`/books/edit/${id}`)
+  }
+
   useEffect(() => {
     async function loadBook() {
       const bookData = await fetchBookById(id)
@@ -111,9 +116,16 @@ const BookDetails = () => {
         <ThemedText>{book.description}</ThemedText>
       </ThemedCard>
 
-      <ThemedButton onPress={handleDelete} style={styles.delete}>
-        <Text style={{ color: '#fff', textAlign: 'center' }}>Delete Book</Text>
-      </ThemedButton>
+      {/* NEW: Action Buttons Container */}
+      <View style={styles.actionButtons}>
+        <ThemedButton onPress={handleEdit} style={styles.editButton}>
+          <Text style={{ color: '#fff', textAlign: 'center' }}>Edit Book</Text>
+        </ThemedButton>
+
+        <ThemedButton onPress={handleDelete} style={styles.delete}>
+          <Text style={{ color: '#fff', textAlign: 'center' }}>Delete Book</Text>
+        </ThemedButton>
+      </View>
     </ThemedView>
   )
 }
@@ -132,11 +144,24 @@ const styles = StyleSheet.create({
   card: {
     margin: 20
   },
+  // NEW: Action buttons container
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 15,
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  // NEW: Edit button style
+  editButton: {
+    backgroundColor: Colors.primary,
+    width: 150,
+    flex: 1,
+  },
   delete: {
-    marginTop: 40,
     backgroundColor: Colors.warning,
-    width: 200,
-    alignSelf: "center",
+    width: 150,
+    flex: 1,
   },
   ratingSection: {
     backgroundColor: 'rgba(0,0,0,0.05)',

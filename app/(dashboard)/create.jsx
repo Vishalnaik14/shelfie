@@ -1,14 +1,14 @@
-import { StyleSheet, Text, TouchableWithoutFeedback, Keyboard, ScrollView, Platform } from 'react-native'
+import { StyleSheet, Text, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native'
 import { useBooks } from "../../hooks/useBooks"
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { Picker } from '@react-native-picker/picker'
 
 // themed components
 import ThemedView from "../../components/ThemedView"
 import ThemedText from "../../components/ThemedText"
 import ThemedTextInput from "../../components/ThemedTextInput"
 import ThemedButton from '../../components/ThemedButton'
+import ThemedDropdown from '../../components/ThemedDropdown'
 import Spacer from '../../components/Spacer'
 
 // Genre options
@@ -103,26 +103,18 @@ const Create = () => {
             />
             <Spacer />
 
-           {/* Genre Dropdown */}
+            {/* Genre Dropdown */}
             <ThemedView style={styles.pickerContainer}>
               <ThemedText style={styles.label}>Genre:</ThemedText>
-              <ThemedView style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={genre}
-                  onValueChange={(itemValue) => {
-                    console.log("Selected genre:", itemValue)
-                    setGenre(itemValue)
-                  }}
-                  style={styles.picker}
-                  mode="dropdown"
-                  dropdownIconColor="#666"
-                >
-                  <Picker.Item label="Select a genre..." value="" />
-                  {GENRES.map((g) => (
-                    <Picker.Item key={g} label={g} value={g} />
-                  ))}
-                </Picker>
-              </ThemedView>
+              <ThemedDropdown
+                selectedValue={genre}
+                onValueChange={(itemValue) => {
+                  console.log("Selected genre:", itemValue)
+                  setGenre(itemValue)
+                }}
+                items={GENRES}
+                placeholder="Select a genre..."
+              />
             </ThemedView>
 
             <Spacer />
@@ -197,31 +189,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
-  },
-  pickerWrapper: {
-    borderRadius: 8,
-    borderColor: '#ccc',
-    overflow: 'hidden',
-    borderWidth: 1,
-    backgroundColor: '#2d2a2aff',
-    ...Platform.select({
-      ios: {
-        height: 200,
-      },
-      android: {
-        height: 50,
-      },
-    }),
-  },
-  picker: {
-    ...Platform.select({
-      ios: {
-        height: 180,
-      },
-      android: {
-        height: 50,
-      },
-    }),
   },
   buttonContainer: {
     alignItems: 'center',

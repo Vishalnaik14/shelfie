@@ -53,6 +53,11 @@ export default function DashboardLayout() {
           name="books/[id]"
           options={{ href: null }} 
         />
+
+        <Tabs.Screen 
+          name="books/edit/[id]"
+          options={{ href: null }} 
+        />
       </Tabs>
     </UserOnly>
   )
