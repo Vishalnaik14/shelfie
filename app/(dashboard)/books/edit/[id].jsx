@@ -24,7 +24,7 @@ const EditBook = () => {
   const { fetchBookById, updateBook } = useBooks()
   const router = useRouter()
 
-  // Load book data when component mounts
+  // Load book data when component mounts or id changes
   useEffect(() => {
     async function loadBook() {
       try {
@@ -41,30 +41,24 @@ const EditBook = () => {
     }
 
     loadBook()
-
     return () => setBook(null)
-  }, [id])
+  }, [id, fetchBookById])
 
-  // Handle save/update
+  // Handle save/update and refetch after save to ensure UI updates
   const handleSave = async () => {
-    // Validation
     if (!title.trim()) {
       Alert.alert("Validation Error", "Please enter a book title")
       return
     }
-
     if (!author.trim()) {
       Alert.alert("Validation Error", "Please enter an author name")
       return
     }
-
     if (!description.trim()) {
       Alert.alert("Validation Error", "Please enter a description")
       return
     }
-
     setLoading(true)
-
     try {
       await updateBook(id, {
         title: title.trim(),
@@ -72,6 +66,14 @@ const EditBook = () => {
         genre: genre.trim() || "Other",
         description: description.trim(),
       })
+
+      // Refetch to confirm update and update UI
+      const updatedBook = await fetchBookById(id)
+      setBook(updatedBook)
+      setTitle(updatedBook.title || "")
+      setAuthor(updatedBook.author || "")
+      setGenre(updatedBook.genre || "")
+      setDescription(updatedBook.description || "")
 
       Alert.alert("Success", "Book updated successfully!", [
         {

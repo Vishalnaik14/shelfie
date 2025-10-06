@@ -49,7 +49,12 @@ export function BooksProvider({children}) {
         DATABASE_ID,
         COLLECTION_ID,
         ID.unique(),
-        {...data, userId: user.$id, rating: 0},
+        {
+          ...data, 
+          userId: user.$id, 
+          rating: 0,
+          status: data.status || "Want to Read" // Default status
+        },
         [
           Permission.read(Role.user(user.$id)),
           Permission.update(Role.user(user.$id)),
@@ -85,6 +90,7 @@ export function BooksProvider({children}) {
         description: currentBook.description,
         genre: currentBook.genre || 'Other',
         rating: currentBook.rating || 0,
+        status: currentBook.status || "Want to Read",
         ...data // Override with new data
       }
 
